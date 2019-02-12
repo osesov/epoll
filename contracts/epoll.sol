@@ -78,7 +78,7 @@ contract epoll {
             return;
         if (voted[msg.sender])
             return;
-        
+
         results[choice] += 1;
     }
 
@@ -89,11 +89,8 @@ contract epoll {
 
     function modpow(uint256 a, uint256 b, uint256 modulo) public pure returns(uint256) {
         uint256 result = 1;
-        uint256 base;
+        uint256 base = a % modulo;
         uint256 runner = b % modulo;
-
-
-        base = a % modulo;
 
         while (runner > 0) {
             if (runner & 1 != 0)
