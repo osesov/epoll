@@ -10,6 +10,8 @@ contract epoll {
     uint256 public n; // RSA signing modulo
     mapping(address => bool) voted;
 
+    event Vote(uint256 _value, uint256 _choice);
+
     constructor(string memory subject_,
                 string memory choices_,
                 uint256 e_,
@@ -72,14 +74,20 @@ contract epoll {
     }
 
     function vote(uint256 signature, uint choice) public isNotEmpty {
-        if (!checkSignature(msg.sender, signature))
-            return;
-        if (choice < choices.length)
-            return;
-        if (voted[msg.sender])
-            return;
+        uint status = 0;
 
-        results[choice] += 1;
+        if (!checkSignature(msg.sender, signature))
+            status += 1;
+        if (choice >= choices.length)
+            status += 2;
+        if (voted[msg.sender])
+            status += 4;
+
+        if (status == 0) {
+            results[choice] += 1;
+            voted[msg.sender] = true;
+        }
+        emit Vote(status, choice);
     }
 
     ///

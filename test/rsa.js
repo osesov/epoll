@@ -90,10 +90,9 @@ RSA.blind = function(m, key) {
         }
     }
 
-      
     let r;
     const keysize = key.n.bitLength()
-  
+
     do {
       r = randomPrime(keysize / 2);
     } while (r.geq(key.n));

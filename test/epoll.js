@@ -8,8 +8,8 @@ const epoll = artifacts.require("epoll");
 epoll.numberFormat = 'BN';
 
 contract("epollFactory", accounts => {
-  const pollSubject = "Poll of something?";
-  const choices = ["yes", "no"]
+  const pollSubject = "How would like your eggs?";
+  const choices = ["Sunny Side Up", "Over Easy", "Poached", "I don't care!"]
 
   function toEthNumber(n) {
     return "0x" + n.toString(16)
@@ -77,9 +77,10 @@ contract("epollFactory", accounts => {
     const instance = await deployPoll(pollSubject, choices, k);
     const vote = bigInt.randBetween(0, choices.length);
 
-    const a = web3.eth.accounts.create()
+    const a = { address: accounts[1] }
+    // console.log(a.address);
     const address = fromEthNumber(a.address)
-    console.log("acc: ", a.address, address);
+    // console.log("acc: ", a.address, address);
     const blinded = RSA.blind(address, k);
     
     // const value = await instance.modpow.call("0xf142fdc16b9c4197", 65536, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
@@ -102,6 +103,25 @@ contract("epollFactory", accounts => {
     assert.isTrue( RSA.verify(S, address, k) )
     assert.isTrue(await instance.checkSignature.call(a.address, toEthNumber(S)))
 
+    const x = await instance.vote(toEthNumber(S), 0, {from: a.address});
+
+    // console.log("x:", x);
+    console.log("x:", x.logs[0].args['0'].toString(16));
+
+    const y = await instance.vote(toEthNumber(S), choices.length, {from: a.address});
+    console.log("y:", y.logs[0].args['0'].toString(16));
+
+    {
+      const z = await instance.vote(toEthNumber(S), choices.length, {from: a.address});
+      console.log("z:", z.logs[0].args['0'].toString(16));
+      // console.log("z:", z.logs[0].args['1'].toString(16));
+    }
+    
+    {
+      const z = await instance.vote(toEthNumber(S.add(1)), choices.length - 1, {from: a.address});
+      console.log("z:", z.logs[0].args['0'].toString(16));
+      // console.log("z:", z.logs[0].args['1'].toString(16));
+    }
     // // console.log(assert)
     // const k = RSA.generate(256);
     // // console.log("key: ", k)
