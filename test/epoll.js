@@ -81,18 +81,22 @@ contract("epollFactory", accounts => {
     const address = fromEthNumber(a.address)
     console.log("acc: ", a.address, address);
     const blinded = RSA.blind(address, k);
-    const b1 = await instance.blind.call(a.address, toEthNumber(blinded.r))
+    
+    // const value = await instance.modpow.call("0xf142fdc16b9c4197", 65536, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+    // console.log("XX: ", value.toString(10))
+
+    // const b1 = await instance.blind.call(a.address, toEthNumber(blinded.r))
     const bS = RSA.sign(blinded.m, k);
     const S = RSA.unblind(bS, blinded, k)
 
-    const x = await instance.sign.call(toEthNumber(blinded.m), toEthNumber(k.e));
+    // const x = await instance.sign.call(toEthNumber(blinded.m), toEthNumber(k.e));
     console.log("n: ", k.n.toString(10))
     console.log("m: ", fromEthNumber(a.address))
     console.log("m': ", blinded.m.toString(10))
-    console.log("m': ", b1.toString(10))
+    // console.log("m': ", b1.toString(10))
     console.log("e: ", k.e.toString(10))
 
-    console.log("ct ", x.toString(10))
+    // console.log("ct ", x.toString(10))
     console.log("lb1 ", S.toString(10))
     console.log("lb2 ", RSA.sign(address, k).toString(10))
     assert.isTrue( RSA.verify(S, address, k) )

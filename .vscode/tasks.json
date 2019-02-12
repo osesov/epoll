@@ -6,7 +6,17 @@
         {
             "label": "compile",
             "type": "shell",
-            "command": "truffle compile",
+            "command": "../truffle compile"
+        },
+        {
+            "label": "deploy",
+            "type": "shell",
+            "command": "../truffle deploy"
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "../truffle test",
             "group": {
                 "kind": "build",
                 "isDefault": true

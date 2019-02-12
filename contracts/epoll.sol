@@ -68,7 +68,7 @@ contract epoll {
     }
 
     function checkSignature(address voterAddress, uint256 signature) public view returns (bool) {
-        return uint256(voterAddress) == signature ** e % n;
+        return uint256(voterAddress) == modpow(signature, e, n);
     }
 
     function vote(uint256 signature, uint choice) public isNotEmpty {
@@ -83,17 +83,25 @@ contract epoll {
     }
 
     ///
-    function blind(address votingAddress, uint256 r) public view returns (uint256) {
-        uint256 mul = r ** e % n;
-        return uint256(votingAddress) * mul % n;
+    function modmul(uint256 a, uint256 b, uint256 modulo) public pure returns(uint256 x) {
+        assembly { x := mulmod(a, b, modulo) }
     }
 
-    function sign(uint256 value, uint256 d) public view returns (uint256) {
-        return (value ** d) % n;
-    }
+    function modpow(uint256 a, uint256 b, uint256 modulo) public pure returns(uint256) {
+        uint256 result = 1;
+        uint256 base;
+        uint256 runner = b % modulo;
 
-    function unblind(address signedValue, uint256 rInv) public view returns (uint256) {
-        return (uint256(signedValue) * rInv) % n;
+
+        base = a % modulo;
+
+        while (runner > 0) {
+            if (runner & 1 != 0)
+                result = modmul(result, base, modulo);
+            base = modmul(base, base, modulo);
+            runner = runner >> 1;
+        }
+        return result;
     }
 }
 
