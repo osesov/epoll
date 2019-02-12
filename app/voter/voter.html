@@ -1,0 +1,42 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="web3" content="ws://localhost:8545">
+  <title>Voter</title>
+  <link rel="stylesheet" href="vote.css">
+  <script src="voter.js"></script>
+</head>
+<body background="images/bg.jpg">
+  <table  style="text-align: center; margin:auto; width: 95%;">
+    <tbody>
+      <tr>
+        <td>
+        <img style="width: 972px; height: 167px;" alt="" src="images/title.jpg">
+        </td>
+      </tr>
+      </tbody>
+  </table>
+ <br>
+ <form id="vote" onsubmit="">
+    <table style="margin: auto">
+      <tbody>
+        <tr><td>Адрес Голосующего:</td> <td><select id="voter-address"></select></td></tr>
+        <tr><td>Адрес Опроса:</td><td><input type="text" id="poll-address" size="40" readonly></td></tr>
+        <tr><td>Тема:</td><td><input type="text" id="subject" size="40"></input></td></tr>
+        <tr><td>Варианты ответов:</td><td><table id="choices"></table></td></tr>
+      	<tr><td colspan="2"><div style="text-align: center"><button id="voter-vote">Отправить</button></div></td></tr>
+      </tbody>
+    </table>
+  </form>
+
+  <div id="poll-results-pane">
+      <h1 style="text-align:center">Результат Опроса:</h1>
+    <table id="poll-results"></table>
+  </div>
+  
+  <div>
+    <h1 style="text-align:center">Список блоков:</h1>
+    <table id="log"></table>
+  </div>
+</body>
+</html>

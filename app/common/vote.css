@@ -1,0 +1,45 @@
+@font-face {
+    font-family:'Gothic'; /* Имя шрифта */
+    src: url('fonts/4021.ttf') format('truetype'); /* Путь к файлу со шрифтом */
+}
+
+.logHeaderClass {
+  border-top: 1px solid black;
+  background-color: lightblue;
+}
+
+.logTransaction {
+  border-top: 1px dashed black;
+  /* background-color: lightgreen; */
+}
+
+.logTransactionHeaderEmpty {
+  visibility: hidden;
+}
+
+.logTransactionHeader {
+  border-top: 2px solid black;
+  background-color: aliceblue;
+}
+
+table#poll-results, table#log {
+  border: 1px solid black;
+  width: 80%;
+  border-collapse: collapse;
+  background-color: #fff;
+  margin:auto; 
+}
+
+.winner-choice {
+  background-color: goldenrod;
+}
+
+.looser-choice {
+  background-color: silver;
+}
+
+body {
+  /* background-image:    url(images/bg.jpg); */
+  background-size:     100%;
+  background-repeat:   repeat-y;
+}

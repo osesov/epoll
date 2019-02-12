@@ -1,0 +1,51 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="web3" content="ws://localhost:8545">
+
+  <title>CA</title>
+  <link rel="stylesheet" href="vote.css">
+  <script src="ca.js"></script>
+</head>
+<body background="images/bg.jpg">
+  <table  style="text-align: center; margin:auto; width: 95%;">
+    <tbody>
+      <tr>
+        <td>
+        <img style="width: 972px; height: 167px;" alt="" src="images/title.jpg">
+        </td>
+      </tr>
+      </tbody>
+  </table>
+ <br>
+  <form  id="ca-new-poll" onsubmit="">
+    <table style="margin: auto">
+      <tbody>
+        <tr><td>Адрес Опроса:</td><td><input type="text" id="poll-address" size="40" readonly></td></tr>
+        <tr><td>Тема:</td><td><input type="text" id="subject" value="Готовы к контрольной по физике?"  size="40"></input></td></tr>
+        <tr><td>Варианты ответов:</td><td><textarea id="choices" cols="40" rows="5"/>
+Да
+Нет
+Какая такая контрольная?
+СТОП! А у нас есть физика?!</textarea></td></tr>
+        <tr><td colspan="2">
+          <div style="text-align: center">
+              <button id="ca-new-poll">Создать</button>
+              <button id="ca-close-poll">Закрыть</button>
+            </div>
+        </td></tr>
+      </tbody>
+    </table>
+  </form>
+
+  <div id="poll-results-pane">
+      <h1 style="text-align:center">Результат Опроса:</h1>
+    <table id="poll-results"></table>
+  </div>
+  
+  <div>
+    <h1 style="text-align:center">Список блоков:</h1>
+    <table id="log"></table>
+  </div>
+</body>
+</html>
