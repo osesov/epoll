@@ -10,7 +10,7 @@ contract epoll {
     uint256 public n; // RSA signing modulo
     mapping(address => bool) voted;
 
-    event Vote(uint256 _value, uint256 _choice);
+    event Vote(uint256 outcome);
 
     constructor(string memory subject_,
                 string memory choices_,
@@ -87,7 +87,7 @@ contract epoll {
             results[choice] += 1;
             voted[msg.sender] = true;
         }
-        emit Vote(status, choice);
+        emit Vote(status);
     }
 
     ///

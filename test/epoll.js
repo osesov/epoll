@@ -1,8 +1,9 @@
-const BN = require('./bn.js');
+const BN = require('bn.js');
 const RSA = require("./rsa.js")
-const bigInt = require('./BigInteger.js');
 const pf = artifacts.require("epollFactory");
 const epoll = artifacts.require("epoll");
+
+const ONE = new BN(1)
 
 // Choices are:  `["BigNumber", "BN", "String"].
 epoll.numberFormat = 'BN';
@@ -11,37 +12,15 @@ contract("epollFactory", accounts => {
   const pollSubject = "How would like your eggs?";
   const choices = ["Sunny Side Up", "Over Easy", "Poached", "I don't care!"]
 
-  function toEthNumber(n) {
-    return "0x" + n.toString(16)
-  }
-
-  function fromEthNumber(n) {
-    return new BN(n.replace("0x", ""), 16).toString(10);
-  }
-
-  function deployPoll(subject, choices, key) {
+  async function deployPoll(subject, choices, key) {
     if (key == null)
-      key = RSA.generate(256);
+      key = await RSA.generate(256);
 
-    return epoll.new(subject, choices.join(";"),
-      toEthNumber(key.e),
-      toEthNumber(key.n));
+    return epoll.new(subject, choices.join(";"), key.e, key.n);
   }
 
-  it("red", async () => {
-    const n = new BN(101)
-    const a = new BN(65537);
-    const b = new BN(123);
-    const red = BN.red(n);
-  
-    const c = b.toRed(red).redPow(a).fromRed();
-    assert.equal(c.cmp(new BN(49)), 0);
-    console.log(c.toString())
-  });
-  
   it("poll initializing", async () => {
     const instance = await deployPoll(pollSubject, choices);
-
     // console.log("xx: ", instance);
     const subject = await instance.subject();
     assert.equal(subject, pollSubject, "Check poll subject")
@@ -57,10 +36,9 @@ contract("epollFactory", accounts => {
   });
 
   it("rsa", async () => {
-    // console.log(assert)
     const k = RSA.generate(256);
     // console.log("key: ", k)
-    const M = bigInt.randBetween(2, 1024*1024)
+    const M = RSA.randBetween(2, 1024*1024)
     // console.log("M: ", M)
     const X = RSA.blind(M, k)
     // console.log("blind: ", X)
@@ -75,24 +53,22 @@ contract("epollFactory", accounts => {
   it("vote", async () => {
     const k = RSA.generate(256);
     const instance = await deployPoll(pollSubject, choices, k);
-    const vote = bigInt.randBetween(0, choices.length);
+    const vote = RSA.randBetween(0, choices.length);
 
-    const a = { address: accounts[1] }
-    // console.log(a.address);
-    const address = fromEthNumber(a.address)
-    // console.log("acc: ", a.address, address);
+    const mainAddress = accounts[0];
+    const voteAddress = accounts[1];
+    const otherAddress = accounts[2];
+    console.log("main addr:", mainAddress);
+    console.log("vote addr:", voteAddress);
+
+    const address = new BN(voteAddress.replace(/^0x/, ""), "hex");
     const blinded = RSA.blind(address, k);
-    
-    // const value = await instance.modpow.call("0xf142fdc16b9c4197", 65536, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-    // console.log("XX: ", value.toString(10))
-
-    // const b1 = await instance.blind.call(a.address, toEthNumber(blinded.r))
     const bS = RSA.sign(blinded.m, k);
     const S = RSA.unblind(bS, blinded, k)
 
-    // const x = await instance.sign.call(toEthNumber(blinded.m), toEthNumber(k.e));
+    // const x = await instance.sign.call(blinded.m, k.e);
     console.log("n: ", k.n.toString(10))
-    console.log("m: ", fromEthNumber(a.address))
+    console.log("m: ", address.toString(10))
     console.log("m': ", blinded.m.toString(10))
     // console.log("m': ", b1.toString(10))
     console.log("e: ", k.e.toString(10))
@@ -100,41 +76,47 @@ contract("epollFactory", accounts => {
     // console.log("ct ", x.toString(10))
     console.log("lb1 ", S.toString(10))
     console.log("lb2 ", RSA.sign(address, k).toString(10))
+    const r = await instance.modpow.call(S, k.e, k.n);
+    console.log("contract: ", r.toString(16));
     assert.isTrue( RSA.verify(S, address, k) )
-    assert.isTrue(await instance.checkSignature.call(a.address, toEthNumber(S)))
 
-    const x = await instance.vote(toEthNumber(S), 0, {from: a.address});
+    // assert.isTrue(await instance.checkSignature.call(address, S))
 
-    // console.log("x:", x);
-    console.log("x:", x.logs[0].args['0'].toString(16));
+    async function printLogs(x) {
+      if (x instanceof Promise)
+        x = await x;
+      
+        console.log('---')
+        if (x.logs) {
+          x.logs.forEach( (value, index) => {
+            console.log("Event: %s", value.event);
+            for (var p in value.args) {
+              if (!isNaN(parseInt(p,10)))
+                continue;
+              if (p === '__length__')
+                continue;
 
-    const y = await instance.vote(toEthNumber(S), choices.length, {from: a.address});
-    console.log("y:", y.logs[0].args['0'].toString(16));
-
-    {
-      const z = await instance.vote(toEthNumber(S), choices.length, {from: a.address});
-      console.log("z:", z.logs[0].args['0'].toString(16));
-      // console.log("z:", z.logs[0].args['1'].toString(16));
+              var v = value.args[p].toString(16);
+              console.log("\t%s: %s", p, v);
+           }
+        });
+      }
+      return x;
     }
-    
-    {
-      const z = await instance.vote(toEthNumber(S.add(1)), choices.length - 1, {from: a.address});
-      console.log("z:", z.logs[0].args['0'].toString(16));
-      // console.log("z:", z.logs[0].args['1'].toString(16));
+
+    async function checkOutcome(expect, x) {
+      x = await printLogs(x)
+      x.logs.forEach((item) => {
+        if (item.event === "Vote")
+          assert.equal(item.args['outcome'].toNumber(), expect);
+      });
     }
-    // // console.log(assert)
-    // const k = RSA.generate(256);
-    // // console.log("key: ", k)
-    // const M = bigInt.randBetween(2, 1024*1024)
-    // // console.log("M: ", M)
-    // const X = RSA.blind(M, k)
-    // // console.log("blind: ", X)
-    // const S = RSA.sign(X.m, k)
-    // // console.log("sign: ", S)
-    // const U = RSA.unblind(S, X, k)
-    // // console.log("unblind: ", U)
-    // assert.isTrue(RSA.verify(U, M, k))
-    // assert.isTrue(RSA.verify(S, X.m, k))
+
+    checkOutcome( 1, await instance.vote(S, 0, {from: mainAddress}) )
+    checkOutcome( 1, await instance.vote(S, 0, {from: otherAddress}) )
+    checkOutcome( 2, await instance.vote(S, choices.length, {from: voteAddress}))
+    checkOutcome( 0, await instance.vote(S, choices.length - 1, {from: voteAddress}) );
+    checkOutcome( 4, await instance.vote(S, 0, {from: voteAddress}) );
   });
 
 });
