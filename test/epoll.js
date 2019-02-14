@@ -1,5 +1,5 @@
 const BN = require('bn.js');
-const RSA = require("./rsa.js")
+const RSA = require("../lib/rsa.js")
 const pf = artifacts.require("epollFactory");
 const epoll = artifacts.require("epoll");
 
@@ -105,7 +105,7 @@ contract("epollFactory", accounts => {
     }
 
     async function checkOutcome(expect, x) {
-      x = await printLogs(x)
+      x = await printLogs(x);
       x.logs.forEach((item) => {
         if (item.event === "Vote")
           assert.equal(item.args['outcome'].toNumber(), expect);

@@ -6,7 +6,10 @@
         {
             "label": "compile",
             "type": "shell",
-            "command": "${workspaceRoot}/node_modules/.bin/truffle compile"
+            "command": "${workspaceRoot}/node_modules/.bin/truffle compile",
+            "problemMatcher": [
+                "$tsc"
+            ]
         },
         {
             "label": "deploy",
@@ -20,7 +23,10 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": [
+                "$tsc"
+            ]
         }
     ]
 }
