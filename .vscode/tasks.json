@@ -14,16 +14,20 @@
         {
             "label": "deploy",
             "type": "shell",
-            "command": "${workspaceRoot}/node_modules/.bin/truffle deploy"
+            "command": "${workspaceRoot}/node_modules/.bin/truffle migrate",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "test",
             "type": "shell",
             "command": "${workspaceRoot}/node_modules/.bin/truffle test",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "problemMatcher": [
                 "$tsc"
             ]

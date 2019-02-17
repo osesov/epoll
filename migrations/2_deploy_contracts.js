@@ -1,5 +1,5 @@
-const epollFactory = artifacts.require("epollFactory");
+const epoll = artifacts.require("epoll");
 
 module.exports = function(deployer) {
-  deployer.deploy(epollFactory);
+  deployer.deploy(epoll);
 };

@@ -2,46 +2,77 @@ pragma solidity >=0.4.21 <0.6.0;
 
 contract epoll {
     address public owner;
+    uint256 public pollId;
+    string public pollInfo;
     string public subject;
     string[] public choices;
     uint[] public results;
+    uint256 public startTime;
+    uint256 public endTime;
 
     uint256 public e; // RSA signing exponent
     uint256 public n; // RSA signing modulo
     mapping(address => bool) voted;
+    address[] private voters;
 
     event Vote(uint256 outcome);
+    event PollStart(uint256 pollId, string pollInfo);
+    event PollClose(uint256 pollId, string pollInfo, uint result);
 
-    constructor(string memory subject_,
-                string memory choices_,
-                uint256 e_,
-                uint256 n_) public {
+    constructor() public {
         owner = msg.sender;
-        e = e_;
-        n = n_;
-        setChoices(subject_, choices_);
+        startTime = endTime = 1;
     }
 
-    modifier restricted() {
+    // constructor(string memory subject_,
+    //             string memory choices_,
+    //             uint256 e_,
+    //             uint256 n_) public {
+    //     owner = msg.sender;
+    //     initPoll(subject_, choices_, e_, n_);
+    // }
+
+    modifier whenOwner() {
         if (msg.sender == owner)
             _;
     }
 
-    modifier isEmpty() {
-        if (choices.length == 0)
+    modifier whenActive() {
+        if (isActive())
             _;
     }
 
-    modifier isNotEmpty() {
-        if (choices.length > 0)
+    modifier whenClosed() {
+        if (isClosed())
             _;
     }
 
-    function setChoices(string memory subject_, string memory choices_) internal restricted isEmpty {
-        subject = subject_;
+    function isActive() public view returns(bool) {
+        return endTime == 0;
+    }
+
+    function isClosed() public view returns(bool) {
+        return endTime != 0;
+    }
+
+    function initPoll(string memory pollInfo_, uint256 e_, uint256 n_) private {
+        pollInfo = pollInfo_;
+        n = n_;
+        e = e_;
+        startTime = now;
+        endTime = 0;
+        pollId++;
+
+        // clean up previous poll
+        for (uint j = 0; j < voters.length; ++j)
+            delete voted[voters[j]];
+
+        delete choices;
+        delete results;
+        delete voters;
 
         // split choices string
-        bytes memory s = bytes(choices_);
+        bytes memory s = bytes(pollInfo_);
         uint begin = 0;
         byte delim = byte(";");
         for (uint i = 0; i <= s.length; ++i) {
@@ -50,11 +81,22 @@ contract epoll {
                 for (uint j = begin; j < i; ++j)
                     r[j - begin] = s[j];
 
-                choices.push(string(r));
-                results.push(0);
+                if (begin == 0)
+                    subject = string(r);
+                else { 
+                    choices.push(string(r));
+                    results.push(0);
+                }
                 begin = i + 1;
             }
         }
+
+        emit PollStart(pollId, pollInfo);
+    }
+
+    function startPoll(string memory pollInfo_, uint256 e_, uint256 n_) public whenOwner whenClosed
+    {
+        initPoll(pollInfo_, e_, n_);
     }
 
     function getNumberOfChoices() public view returns(uint) {
@@ -73,7 +115,22 @@ contract epoll {
         return uint256(voterAddress) == modpow(signature, e, n);
     }
 
-    function vote(uint256 signature, uint choice) public isNotEmpty {
+    function closePoll() public whenOwner whenActive {
+        endTime = now;
+        uint maxValue = results[0];
+        uint maxIndex = 0;
+
+        for (uint j = 1; j < results.length; ++j) {
+            if (results[j] > maxValue) {
+                maxValue = results[j];
+                maxIndex = j; 
+            }
+        }
+
+        emit PollClose(pollId, pollInfo, maxIndex);
+    }
+
+    function vote(uint256 signature, uint choice, uint pollId_) public whenActive {
         uint status = 0;
 
         if (!checkSignature(msg.sender, signature))
@@ -82,10 +139,13 @@ contract epoll {
             status += 2;
         if (voted[msg.sender])
             status += 4;
+        if (pollId != pollId_)
+            status += 8;
 
         if (status == 0) {
             results[choice] += 1;
             voted[msg.sender] = true;
+            voters.push(msg.sender);
         }
         emit Vote(status);
     }
@@ -107,16 +167,5 @@ contract epoll {
             runner = runner >> 1;
         }
         return result;
-    }
-}
-
-contract epollFactory {
-    address[] public polls;
-
-    function newPoll(string memory subject, string memory choices, uint256 e, uint256 n) public returns (address) {
-        epoll newContract = new epoll(subject, choices, e, n);
-        address pa = address(newContract);
-        polls.push(pa);
-        return pa;
     }
 }
