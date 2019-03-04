@@ -1,5 +1,5 @@
-const epoll = artifacts.require("epoll");
+// const epoll = artifacts.require("epollClosed");
 
 module.exports = function(deployer) {
-  deployer.deploy(epoll);
+  // deployer.deploy(epoll);
 };
