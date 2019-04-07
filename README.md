@@ -12,7 +12,7 @@ In particular, epoll demonstrates following properties:
    access this system, can vote.  So voter might be non-relevant in
    general. This might be enforced by network organization, or might
    be addressed n the code itself.
-   
+
 2) Anonymity: pretty strong, unless the same account used for other
    purports.
 
@@ -89,6 +89,27 @@ CA:     1) 'Over Easy': 1
   1 passing (531ms)
 
 ```
+
+# Демонстрация
+для проведения демонстрации нужно:
+
+1) Поставить node.js (https://nodejs.org/)
+
+2) в корневой папке проекта запустить npm install. Эта команда поставить все необходимые компоненты
+
+3) запустить скрипт mkweb из корня. Этот скрипт подготавливает в папке web два интерфейса:
+   организатора (web/ca) и голосующего (web/voter).
+
+4) запустить сервис блокчейна, который используется для проведения демонстрации:
+    `node_modules/.bin/ganache-cli`
+
+5) запустить все вебприложения, открыв их в браузере
+    `web/ca/ca.html` и `web/voter/voter.html`
+
+6) после этого можно создавать в приложении ca голосования, voter будет получать оповещения
+   и создании и закрытии голосования автоматически. После создания голосования voter
+   даст возможность проголосовать и по закрытии голосования отобразит результат голосования.
+   Возможность зачитать существующие голосования из блокчейна в данный момент не реализована.
 
 # Source code
 
